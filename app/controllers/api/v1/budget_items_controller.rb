@@ -1,5 +1,6 @@
 class Api::V1::BudgetItemsController < ApplicationController
   before_action :set_budget_item, only: [:show, :update, :destroy]
+  before_action :authorize_request
 
   def index
     @budget_items = BudgetItem.all
