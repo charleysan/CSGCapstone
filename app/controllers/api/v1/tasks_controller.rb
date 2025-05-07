@@ -1,9 +1,10 @@
 class Api::V1::TasksController < ApplicationController
+  before_action :authorize_request
   before_action :set_task, only: %i[show update destroy]
 
   # GET /api/v1/tasks
   def index
-    @tasks = Task.all
+    @tasks = current_user.tasks
     render json: @tasks
   end
 
@@ -14,7 +15,7 @@ class Api::V1::TasksController < ApplicationController
 
   # POST /api/v1/tasks
   def create
-    @task = Task.new(task_params)
+    @task = current_user.tasks.build(task_params)
     if @task.save
       render json: @task, status: :created, location: api_v1_task_url(@task)
     else
@@ -34,18 +35,18 @@ class Api::V1::TasksController < ApplicationController
   # DELETE /api/v1/tasks/:id
   def destroy
     @task.destroy
+    head :no_content
   end
 
   private
 
-  # Use callbacks to share common setup or constraints between actions.
+  # Ensure task belongs to current_user
   def set_task
-    @task = Task.find(params[:id])
+    @task = current_user.tasks.find_by(id: params[:id])
+    render json: { error: 'Not found' }, status: :not_found unless @task
   end
 
-  # Only allow a trusted parameter "white list" through.
   def task_params
     params.require(:task).permit(:title, :description, :completed, :category, :due_date)
   end
 end
-

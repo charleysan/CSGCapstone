@@ -1,10 +1,20 @@
 class Api::V1::BudgetItemsController < ApplicationController
-  before_action :set_budget_item, only: [:show, :update, :destroy]
   before_action :authorize_request
+  before_action :set_budget_item, only: [:show, :update, :destroy]
 
   def index
-    @budget_items = BudgetItem.all
-    render json: @budget_items
+    @budget_items = current_user.budget_items
+
+    # Calculate total budgeted and total spent
+    total = @budget_items.sum(:amount)
+    spent = @budget_items.where("amount < 0").sum(:amount).abs # Assuming you have a 'spent' field to track actual spending
+
+    # Render the budget items along with summary info
+    render json: {
+      budget_items: @budget_items,
+      total: total.to_s,
+      spent: spent.to_s
+    }
   end
 
   def show
@@ -12,7 +22,7 @@ class Api::V1::BudgetItemsController < ApplicationController
   end
 
   def create
-    @budget_item = BudgetItem.new(budget_item_params)
+    @budget_item = current_user.budget_items.build(budget_item_params)
     if @budget_item.save
       render json: @budget_item, status: :created
     else
@@ -36,10 +46,11 @@ class Api::V1::BudgetItemsController < ApplicationController
   private
 
   def set_budget_item
-    @budget_item = BudgetItem.find(params[:id])
+    @budget_item = current_user.budget_items.find_by(id: params[:id])
+    render json: { error: 'Not found' }, status: :not_found unless @budget_item
   end
 
   def budget_item_params
-    params.require(:budget_item).permit(:title, :amount, :category, :date, :notes)
+    params.require(:budget_item).permit(:title, :amount, :category, :date, :notes, :spent) # Added `spent` as an expected parameter
   end
 end
