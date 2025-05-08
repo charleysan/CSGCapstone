@@ -4,16 +4,16 @@ class Api::V1::BudgetItemsController < ApplicationController
 
   def index
     @budget_items = current_user.budget_items
-
+  
     total_income = @budget_items.sum(:income)
-    total_spent = @budget_items.sum(:spent) # spent should always be stored as negative
-    total = @budget_items.sum(COALESCE(income, 0) + COALESCE(spent, 0))
-
+    total_spent = @budget_items.sum(:spent) # Should be negative
+    total = total_income + total_spent
+  
     render json: {
       budget_items: @budget_items,
       total_income: total_income.to_s,
-      total_spent: total_spent.to_s
-      total: total
+      total_spent: total_spent.to_s,
+      total: total.to_s
     }
   end
 
