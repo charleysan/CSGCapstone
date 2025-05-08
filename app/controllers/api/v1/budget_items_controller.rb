@@ -7,11 +7,13 @@ class Api::V1::BudgetItemsController < ApplicationController
 
     total_income = @budget_items.sum(:income)
     total_spent = @budget_items.sum(:spent) # spent should always be stored as negative
+    total = @budget_items.sum(COALESCE(income, 0) + COALESCE(spent, 0))
 
     render json: {
       budget_items: @budget_items,
       total_income: total_income.to_s,
       total_spent: total_spent.to_s
+      total: total
     }
   end
 
