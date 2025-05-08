@@ -10,13 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_07_225636) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_08_002635) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "budget_items", force: :cascade do |t|
     t.string "title"
-    t.decimal "amount"
+    t.decimal "income"
     t.string "category"
     t.date "date"
     t.text "notes"

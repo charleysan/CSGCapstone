@@ -51,6 +51,6 @@ class Api::V1::BudgetItemsController < ApplicationController
   end
 
   def budget_item_params
-    params.require(:budget_item).permit(:title, :amount, :category, :date, :notes, :spent) # Added `spent` as an expected parameter
+    params.require(:budget_item).permit(:title, :income, :category, :date, :notes, :spent) # Added `spent` as an expected parameter
   end
 end
