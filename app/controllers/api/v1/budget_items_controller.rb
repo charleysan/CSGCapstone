@@ -5,15 +5,13 @@ class Api::V1::BudgetItemsController < ApplicationController
   def index
     @budget_items = current_user.budget_items
 
-    # Calculate total budgeted and total spent
-    total = @budget_items.sum(:amount)
-    spent = @budget_items.where("amount < 0").sum(:amount).abs # Assuming you have a 'spent' field to track actual spending
+    total_income = @budget_items.sum(:income)
+    total_spent = @budget_items.sum(:spent) # spent should always be stored as negative
 
-    # Render the budget items along with summary info
     render json: {
       budget_items: @budget_items,
-      total: total.to_s,
-      spent: spent.to_s
+      total_income: total_income.to_s,
+      total_spent: total_spent.to_s
     }
   end
 
@@ -22,7 +20,16 @@ class Api::V1::BudgetItemsController < ApplicationController
   end
 
   def create
-    @budget_item = current_user.budget_items.build(budget_item_params)
+    # Ensure spent is stored as negative if provided
+    if budget_item_params[:spent].present?
+      spent_value = -budget_item_params[:spent].to_f.abs
+      updated_params = budget_item_params.merge(spent: spent_value)
+    else
+      updated_params = budget_item_params
+    end
+
+    @budget_item = current_user.budget_items.build(updated_params)
+
     if @budget_item.save
       render json: @budget_item, status: :created
     else
@@ -31,7 +38,14 @@ class Api::V1::BudgetItemsController < ApplicationController
   end
 
   def update
-    if @budget_item.update(budget_item_params)
+    # Ensure spent stays negative
+    if budget_item_params[:spent].present?
+      updated_params = budget_item_params.merge(spent: -budget_item_params[:spent].to_f.abs)
+    else
+      updated_params = budget_item_params
+    end
+
+    if @budget_item.update(updated_params)
       render json: @budget_item
     else
       render json: @budget_item.errors, status: :unprocessable_entity
@@ -51,6 +65,6 @@ class Api::V1::BudgetItemsController < ApplicationController
   end
 
   def budget_item_params
-    params.require(:budget_item).permit(:title, :income, :category, :date, :notes, :spent) # Added `spent` as an expected parameter
+    params.require(:budget_item).permit(:title, :income, :spent, :category, :date, :notes)
   end
 end
